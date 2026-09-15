@@ -1,0 +1,30 @@
+{% extends "django_tables2/table.html" %}
+{% load django_tables2 %}
+
+{% block pagination %}
+  {% if table.page and table.paginator.num_pages > 1 %}
+    <nav class="pagination" aria-label="Stránkovanie">
+      {% if table.page.has_previous %}
+        <a class="pagination__prev" href="{% querystring_replace table.prefixed_page_field=table.page.previous_page_number %}">
+          ← Predošlá
+        </a>
+      {% endif %}
+
+      {% for page_number in table.page|table_page_range:table.paginator %}
+        {% if page_number == "..." %}
+          <span class="pagination__ellipsis">…</span>
+        {% elif page_number == table.page.number %}
+          <span class="pagination__current" aria-current="page">{{ page_number }}</span>
+        {% else %}
+          <a href="{% querystring_replace table.prefixed_page_field=page_number %}">{{ page_number }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if table.page.has_next %}
+        <a class="pagination__next" href="{% querystring_replace table.prefixed_page_field=table.page.next_page_number %}">
+          Ďalšia →
+        </a>
+      {% endif %}
+    </nav>
+  {% endif %}
+{% endblock pagination %}

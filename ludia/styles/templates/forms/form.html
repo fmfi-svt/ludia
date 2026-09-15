@@ -1,0 +1,9 @@
+{% load forms %}
+<div class="form">
+  {% include "forms/non_field_errors.html" %}
+
+  {% for field in form.visible_fields %}
+    {% render_field field %}
+  {% endfor %}
+</div>
+{% for field in form.hidden_fields %}{{ field }}{% endfor %}

@@ -1,0 +1,6 @@
+/.venv
+/static
+/uploads
+__pycache__
+/.env
+/node_modules

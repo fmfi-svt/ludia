@@ -1,0 +1,10 @@
+/.env
+__pycache__
+/node_modules
+/.idea
+/.github
+/.git
+/.venv
+/.ruff_cache
+/uploads
+/static

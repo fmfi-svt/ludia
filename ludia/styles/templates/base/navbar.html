@@ -1,0 +1,23 @@
+{# main navbar #}
+<nav class="navbar">
+  <div class="navbar__inner">
+    <a href="/" class="navbar__brand">Scaffold</a>
+    <button class="navbar__toggle" aria-expanded="false" aria-controls="main-nav">
+      <iconify-icon icon="lucide:menu" class="navbar__toggle-open" width="22"></iconify-icon>
+      <iconify-icon icon="lucide:x" class="navbar__toggle-close" width="22"></iconify-icon>
+    </button>
+    <div class="navbar__nav" id="main-nav">
+      <a href="#" class="navbar__link">Link</a>
+      <span class="navbar__divider"></span>
+      {% if user.is_authenticated %}
+        <span class="navbar__text">{{ user.get_full_name }}</span>
+        <form action="{% url 'oidc_logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="navbar__link">Odhlásiť sa</button>
+        </form>
+      {% else %}
+        <a class="navbar__link" href="{% url 'oidc_authentication_init' %}">Prihlásiť sa</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
