@@ -31,6 +31,7 @@ CONTACT_MAPPING = {
     "6": "room",
 }
 LANGUAGE_MAPPING = {"sk_SK": LanguageChoices.SK, "en_EN": LanguageChoices.EN}
+FMFI_WORKPLACE_ID = 506
 
 
 def download_exports(store_path: Path):
@@ -120,9 +121,6 @@ def _get_workplace_user_id_to_person_id_mapping(store_path: Path) -> dict[int, i
     for relation in relations.values():
         person_id = cit_id_to_person_id.get(int(relation["user_id"]))
         if not person_id:
-            logger.warning(
-                f"CIT user {relation['user_id']} is present in relations.json, but not in users.json."
-            )
             continue
 
         workplace_user_id_to_person_id[relation["id"]] = person_id
@@ -248,3 +246,42 @@ def import_relations(store_path: Path):
     if count := to_delete.count():
         logger.warning(f"Deleting {count} orphaned Relation objects.")
         to_delete.delete()
+
+
+def import_workplaces(store_path: Path):
+    """
+    Imports Workplace objects from CIT data.
+    """
+    workplace_cit_to_id = {w.cit_id: w.id for w in Workplace.objects.all()}
+
+    with (store_path / "workplaces.json").open() as f:
+        workplaces: dict = json.load(f)
+
+    for workplace in workplaces.values():
+        workplace_id = workplace["id"]
+        tree_path = list(map(int, workplace["treePath"].split(",")[::-1]))
+
+        allowed_path_length = 2
+        if FMFI_WORKPLACE_ID in tree_path:
+            allowed_path_length = 3
+
+        if len(tree_path) > allowed_path_length:
+            continue
+
+        parent = None
+        if workplace["parent"]:
+            parent = workplace_cit_to_id.get(int(workplace["parent"]))
+            if not parent:
+                logger.warning(
+                    f"Workplace {workplace['id']} does not have parent in our DB."
+                )
+
+        obj, _ = Workplace.objects.update_or_create(
+            cit_id=workplace_id,
+            defaults={
+                "name_en": workplace["localization"].get("en_EN", {}).get("title", ""),
+                "name_sk": workplace["localization"].get("sk_SK", {}).get("title", ""),
+                "parent_id": parent,
+            },
+        )
+        workplace_cit_to_id[obj.cit_id] = obj.id
