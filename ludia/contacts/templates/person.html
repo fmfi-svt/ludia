@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ person }} {{ block.super }}{% endblock %}
+
+{% block head %}
+  {{ block.super }}
+
+  {% get_available_languages as languages %}
+  {% for lang_code, lang_name in languages %}
+    {% language lang_code %}
+    <link rel="alternate" href="https://{{ request.get_host }}{% url "profile" person.login %}" hreflang="{{ lang_code }}">
+    {% endlanguage %}
+  {% endfor %}
+{% endblock head %}
+
+{% block container %}
+  <img src="https://sluzby.fmph.uniba.sk/f/{{ person.login }}" style="float: right" />
+  <h1>{{ person }}</h1>
+
+  {% for relation in person.relation_set.all %}
+  <p>
+    {{ relation.job_title }}<br>
+    {% with workplaces=relation.all_workplaces %}
+      {{ workplaces.name|linebreaksbr }}
+      {% if workplaces.address %}
+        <br>{{ workplaces.address|linebreaksbr }}
+      {% endif %}
+    {% endwith %}
+  </p>
+  {% endfor %}
+
+  <ul class="list-unstyled list-unstyled--tight mt-4">
+    {% for contact in contacts %}
+    <li class="list-item--icon">
+      {% if contact.contact_type.icon %}
+        <iconify-icon icon="{{ contact.contact_type.icon }}" aria-hidden="true" title="{{ contact.contact_type.name }}"></iconify-icon>
+      {% else %}
+        <b>{{ contact.contact_type.name }}:</b>
+      {% endif %}
+
+      {{ contact.value }}
+    </li>
+    {% endfor %}
+  </ul>
+
+  <h2 class="mt-6">{% translate "Timetable" %}</h2>
+
+  <div class="alert alert--info">TODO: candle</div>
+
+  <a href="https://candle.fmph.uniba.sk/ucitelia/{{ person.login }}" target="_blank" class="btn btn--ghost">
+    Candle
+    <iconify-icon icon="lucide:external-link"></iconify-icon>
+  </a>
+
+  <h2 class="mt-6">{% translate "Selected publications" %}</h2>
+
+  <div class="alert alert--info">TODO: vupch</div>
+
+{% endblock container %}

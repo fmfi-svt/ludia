@@ -5,7 +5,15 @@ from pathlib import Path
 import requests
 from django.conf import settings
 
-from ludia.contacts.models import Contact, ContactType, LanguageChoices, Person, Source
+from ludia.contacts.models import (
+    Contact,
+    ContactType,
+    LanguageChoices,
+    Person,
+    Relation,
+    Source,
+    Workplace,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +22,8 @@ EXPORT_DOWNLOAD_LIST = [
     "users",
     "relations",
     "contacts",
+    "workplaces",
+    "job_titles",
 ]
 CONTACT_MAPPING = {
     "2": "email",
@@ -24,6 +34,9 @@ LANGUAGE_MAPPING = {"sk_SK": LanguageChoices.SK, "en_EN": LanguageChoices.EN}
 
 
 def download_exports(store_path: Path):
+    """
+    Downloads latest exports from CIT API.
+    """
     resp = requests.post(
         EXPORT_URL,
         auth=(settings.CIT_API_USERNAME, settings.CIT_API_PASSWORD),
@@ -72,42 +85,44 @@ def import_people(store_path: Path):
     # TODO: handle orphaned Person objects
 
 
-def _get_cit_id_to_login_mapping(store_path: Path) -> dict[int, str]:
+def _get_cit_id_to_person_id_mapping(store_path: Path) -> dict[int, int]:
     """
-    Returns mapping of CIT user IDs to UNIBA UIDs (login).
+    Returns mapping of CIT user IDs to our `Person` IDs.
     """
-    cit_id_to_login: dict[int, str] = {}
+    login_to_person_id = {p.login: p.id for p in Person.objects.all()}
+    cit_id_to_person: dict[int, int] = {}
 
     with (store_path / "users.json").open() as f:
         users: dict = json.load(f)
 
     for user in users.values():
-        cit_id_to_login[user["id"]] = user["login"]
+        person_id = login_to_person_id.get(user["login"])
+        if not person_id:
+            logger.warning(
+                f"User with login {user['login']} not found in our database."
+            )
+            continue
 
-    return cit_id_to_login
+        cit_id_to_person[user["id"]] = person_id
+
+    return cit_id_to_person
 
 
 def _get_workplace_user_id_to_person_id_mapping(store_path: Path) -> dict[int, int]:
     """
     Returns mapping of CIT `workplace_user_id` to our `Person` IDs.
     """
-    cit_id_to_login = _get_cit_id_to_login_mapping(store_path)
-    login_to_person_id = {p.login: p.id for p in Person.objects.all()}
+    cit_id_to_person_id = _get_cit_id_to_person_id_mapping(store_path)
 
     workplace_user_id_to_person_id: dict[int, int] = {}
     with (store_path / "relations.json").open() as f:
         relations: dict = json.load(f)
     for relation in relations.values():
-        login = cit_id_to_login.get(int(relation["user_id"]))
-        if not login:
+        person_id = cit_id_to_person_id.get(int(relation["user_id"]))
+        if not person_id:
             logger.warning(
                 f"CIT user {relation['user_id']} is present in relations.json, but not in users.json."
             )
-            continue
-
-        person_id = login_to_person_id.get(login)
-        if not person_id:
-            logger.warning(f"User with login {login} not found in our database.")
             continue
 
         workplace_user_id_to_person_id[relation["id"]] = person_id
@@ -116,6 +131,9 @@ def _get_workplace_user_id_to_person_id_mapping(store_path: Path) -> dict[int, i
 
 
 def import_contacts(store_path: Path):
+    """
+    Imports `Contact` objects from CIT data.
+    """
     contact_keys = ["text", "varchar"]
     # Note: contacts.json also contains int and double keys, but they are empty and sadly lists instead of dicts.
 
@@ -126,6 +144,7 @@ def import_contacts(store_path: Path):
     with (store_path / "contacts.json").open() as f:
         contacts: dict = json.load(f)
 
+    present_ids = set()
     for key in contact_keys:
         for contact in contacts[key].values():
             language = LANGUAGE_MAPPING.get(contact["language"], "")
@@ -149,7 +168,7 @@ def import_contacts(store_path: Path):
                 )
                 continue
 
-            Contact.objects.update_or_create(
+            obj, _ = Contact.objects.update_or_create(
                 person_id=person_id,
                 source=source,
                 source_identifier=str(contact["id"]),
@@ -159,5 +178,73 @@ def import_contacts(store_path: Path):
                     "language": language,
                 },
             )
+            present_ids.add(obj.id)
 
-    # TODO: handle orphaned Contact objects
+    to_delete = Contact.objects.filter(source=source).exclude(id__in=present_ids)
+    if count := to_delete.count():
+        logger.warning(f"Deleting {count} orphaned Contact objects.")
+        to_delete.delete()
+
+
+def _get_workplace_mapping(store_path: Path) -> dict[int, int]:
+    """
+    Returns mapping between CIT workplace IDs and our Workplaces.
+    """
+    known_workplaces = {w.cit_id: w.id for w in Workplace.objects.all()}
+    cit_workplaces = {}
+
+    with (store_path / "workplaces.json").open() as f:
+        workplaces: dict = json.load(f)
+
+    for workplace in workplaces.values():
+        workplace_id = workplace["id"]
+        tree_path = map(int, workplace["treePath"].split(",")[::-1])
+
+        for item in tree_path:
+            if item in known_workplaces:
+                cit_workplaces[workplace_id] = known_workplaces[item]
+                break
+
+    return cit_workplaces
+
+
+def import_relations(store_path: Path):
+    """
+    Imports Relation objects from CIT relations data.
+    """
+    workplace_map = _get_workplace_mapping(store_path)
+    cit_id_to_person_id = _get_cit_id_to_person_id_mapping(store_path)
+
+    with (store_path / "relations.json").open() as f:
+        relations: dict = json.load(f)
+
+    present_ids = set()
+    for relation in relations.values():
+        workplace_id = workplace_map.get(int(relation["workplace_id"]))
+        if not workplace_id:
+            logger.warning(
+                f"User {relation['user_id']} does not have valid workplace for ID {relation['workplace_id']}."
+            )
+            continue
+
+        person_id = cit_id_to_person_id.get(int(relation["user_id"]))
+        if not person_id:
+            logger.warning(
+                f"CIT user {relation['user_id']} found in relations.json but not in users.json"
+            )
+            continue
+
+        obj, _ = Relation.objects.update_or_create(
+            person_id=person_id,
+            cit_id=relation["id"],
+            defaults={
+                "workplace_id": workplace_id,
+                "job_title": relation["job_title_id"],  # TODO: real job
+            },
+        )
+        present_ids.add(obj.id)
+
+    to_delete = Relation.objects.exclude(id__in=present_ids)
+    if count := to_delete.count():
+        logger.warning(f"Deleting {count} orphaned Relation objects.")
+        to_delete.delete()

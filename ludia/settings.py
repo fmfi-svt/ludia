@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from django.utils.translation import gettext_noop
 from environs import Env
 
 env = Env()
@@ -45,6 +46,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "mozilla_django_oidc.middleware.SessionRefresh",
+    "django.middleware.locale.LocaleMiddleware",
 ]
 
 ROOT_URLCONF = "ludia.urls"
@@ -90,8 +92,12 @@ OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = 3600  # 1-hour
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
-LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
+LANGUAGE_CODE = "sk"
+LANGUAGES = [
+    ("en", gettext_noop("English")),
+    ("sk", gettext_noop("Slovak")),
+]
+TIME_ZONE = "Europe/Bratislava"
 USE_I18N = True
 USE_TZ = True
 

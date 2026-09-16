@@ -1,33 +1,37 @@
 <!DOCTYPE html>
-{% load static version %}
-<html lang="en">
+{% load i18n static version %}
+{% get_current_language as lang %}
+<html lang="{{ lang }}">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>{% block title %}- Scaffold{% endblock %}</title>
+    <title>{% block title %}- Ľudia{% endblock %}</title>
     {% block head %}{% endblock %}
 
-    <link href="https://sluzby.fmph.uniba.sk/jds/1.1/jds.css" rel="stylesheet">
+    <link href="https://sluzby.fmph.uniba.sk/jds/1.2/jds.css" rel="stylesheet">
     <script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js"></script>
-    <script src="https://sluzby.fmph.uniba.sk/jds/1.1/jds.js" defer></script>
+    <script src="https://sluzby.fmph.uniba.sk/jds/1.2/jds.js" defer></script>
     <script src="{% static 'app.js' %}?v={% app_version %}" defer></script>
   </head>
   <body hx-headers='{"x-csrftoken": "{{ csrf_token }}"}'>
     {% block body %}
       <header class="institutional-header">
         <div class="institutional-header__inner">
-          Oficiálna stránka
-          <a href="https://fmph.uniba.sk/">Fakulty matematiky, fyziky a informatiky UK</a>
+          {% translate "Official website of" %}
+          <a href="https://fmph.uniba.sk/">{% translate "Faculty of Mathematics, Physics and Informatics" %}</a>
         </div>
       </header>
       {% include "base/navbar.html" %}
 
-      {% block outer_container %}
-      <div class="container container--padded">
-        {% block container %}{% endblock %}
+      <div class="page-content">
+        {% block outer_container %}
+        <div class="container container--padded">
+          {% block container %}{% endblock %}
+        </div>
+        {% endblock outer_container %}
       </div>
-      {% endblock outer_container %}
+
       <footer class="footer">
         <div class="footer__inner">
           <span>© {% now "Y" %} ŠVT FMFI UK</span>
