@@ -1,7 +1,26 @@
 import re
+from typing import Any
 
 from django.db import connection, models
 from django.utils.translation import get_language
+
+
+def get_translation(obj: Any, key: str, language: str | None = None) -> Any:
+    if language is None:
+        language = get_language()
+
+    preference = ["sk", "en"]
+    if language == "en":
+        preference = ["en", "sk"]
+
+    for lang in preference:
+        if hasattr(obj, "get"):
+            value = obj.get(f"{key}_{lang}")
+        else:
+            value = getattr(obj, f"{key}_{lang}", None)
+
+        if value:
+            return value
 
 
 class LanguageChoices(models.TextChoices):
@@ -48,9 +67,7 @@ class ContactType(models.Model):
 
     @property
     def name(self) -> str:
-        if get_language() == "sk":
-            return self.name_sk
-        return self.name_en
+        return get_translation(self, "name")
 
 
 class Source(models.Model):
@@ -106,9 +123,7 @@ class Workplace(models.Model):
 
     @property
     def name(self) -> str:
-        if get_language() == "sk":
-            return self.name_sk
-        return self.name_en
+        return get_translation(self, "name")
 
 
 class Relation(models.Model):
@@ -118,10 +133,15 @@ class Relation(models.Model):
     person_id: int
     workplace = models.ForeignKey(Workplace, on_delete=models.CASCADE)
     workplace_id: int
-    job_title = models.CharField(max_length=256)
+    job_title_sk = models.CharField(max_length=256, blank=True)
+    job_title_en = models.CharField(max_length=256, blank=True)
 
     def __str__(self) -> str:
         return f"{self.job_title} @ {self.workplace}"
+
+    @property
+    def job_title(self) -> str:
+        return get_translation(self, "job_title")
 
     def all_workplaces(self) -> dict[str, str]:
         table = connection.ops.quote_name(Workplace._meta.db_table)
@@ -155,8 +175,9 @@ class Relation(models.Model):
             )
 
             for workplace_name_sk, workplace_name_en, workplace_address in cursor:
-                name_sk.append(workplace_name_sk)
-                name_en.append(workplace_name_en)
+                names = {"name_en": workplace_name_en, "name_sk": workplace_name_sk}
+                name_sk.append(get_translation(names, "name", "sk"))
+                name_en.append(get_translation(names, "name", "en"))
                 if not address and workplace_address:
                     address = workplace_address
 
@@ -165,5 +186,5 @@ class Relation(models.Model):
             "name_en": "\n".join(name_en),
             "address": address,
         }
-        data["name"] = data[f"name_{get_language()}"]
+        data["name"] = get_translation(data, "name")
         return data

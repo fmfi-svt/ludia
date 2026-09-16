@@ -5,6 +5,14 @@ from pathlib import Path
 import requests
 from django.conf import settings
 
+from ludia.contacts.imports.cit_types import (
+    CIT_Contact,
+    CIT_JobTitle,
+    CIT_Relation,
+    CIT_SAPJobTitle,
+    CIT_User,
+    CIT_Workplace,
+)
 from ludia.contacts.models import (
     Contact,
     ContactType,
@@ -24,6 +32,7 @@ EXPORT_DOWNLOAD_LIST = [
     "contacts",
     "workplaces",
     "job_titles",
+    "sap_job_titles",
 ]
 CONTACT_MAPPING = {
     "2": "email",
@@ -65,22 +74,24 @@ def import_people(store_path: Path):
     """
     Creates `Person` object for each user in the CIT export.
     """
-    import_keys = [
-        "login",
-        "first_name",
-        "middle_name",
-        "last_name",
-        "title_before",
-        "title_after",
-    ]
 
     with (store_path / "users.json").open() as f:
-        users: dict = json.load(f)
+        users: dict[str, CIT_User] = json.load(f)
 
     for user in users.values():
         Person.objects.update_or_create(
             university_id=user["uoc"],
-            defaults={key: (user[key] or "").strip() for key in import_keys},
+            defaults={
+                key: (user[key] or "").strip()
+                for key in [
+                    "login",
+                    "first_name",
+                    "middle_name",
+                    "last_name",
+                    "title_before",
+                    "title_after",
+                ]
+            },
         )
 
     # TODO: handle orphaned Person objects
@@ -94,7 +105,7 @@ def _get_cit_id_to_person_id_mapping(store_path: Path) -> dict[int, int]:
     cit_id_to_person: dict[int, int] = {}
 
     with (store_path / "users.json").open() as f:
-        users: dict = json.load(f)
+        users: dict[str, CIT_User] = json.load(f)
 
     for user in users.values():
         person_id = login_to_person_id.get(user["login"])
@@ -117,7 +128,7 @@ def _get_workplace_user_id_to_person_id_mapping(store_path: Path) -> dict[int, i
 
     workplace_user_id_to_person_id: dict[int, int] = {}
     with (store_path / "relations.json").open() as f:
-        relations: dict = json.load(f)
+        relations: dict[str, CIT_Relation] = json.load(f)
     for relation in relations.values():
         person_id = cit_id_to_person_id.get(int(relation["user_id"]))
         if not person_id:
@@ -140,7 +151,7 @@ def import_contacts(store_path: Path):
     contact_type_map = {c.identifier: c.id for c in ContactType.objects.all()}
 
     with (store_path / "contacts.json").open() as f:
-        contacts: dict = json.load(f)
+        contacts: dict[str, dict[str, CIT_Contact]] = json.load(f)
 
     present_ids = set()
     for key in contact_keys:
@@ -192,7 +203,7 @@ def _get_workplace_mapping(store_path: Path) -> dict[int, int]:
     cit_workplaces = {}
 
     with (store_path / "workplaces.json").open() as f:
-        workplaces: dict = json.load(f)
+        workplaces: dict[str, CIT_Workplace] = json.load(f)
 
     for workplace in workplaces.values():
         workplace_id = workplace["id"]
@@ -206,15 +217,43 @@ def _get_workplace_mapping(store_path: Path) -> dict[int, int]:
     return cit_workplaces
 
 
+def _get_job_titles(store_path: Path) -> dict[int, dict[str, str]]:
+    """
+    Returns mapping between job_title_id and the real job title (both translations).
+    """
+    sap_titles = {}
+    with (store_path / "sap_job_titles.json").open() as f:
+        sap_title_data: dict[str, CIT_SAPJobTitle] = json.load(f)
+
+    for sap_title in sap_title_data.values():
+        sap_titles[sap_title["sap_text_sha1"]] = sap_title["text"]
+
+    titles = {}
+    with (store_path / "job_titles.json").open() as f:
+        title_data: dict[str, CIT_JobTitle] = json.load(f)
+
+    for title in title_data.values():
+        sap_title = sap_titles.get(title["sap_text_hash"], "")
+        titles[title["id"]] = {
+            "en": title["localization"].get("en_EN", {}).get("long_job_title", ""),
+            "sk": title["localization"]
+            .get("sk_SK", {})
+            .get("long_job_title", sap_title),
+        }
+
+    return titles
+
+
 def import_relations(store_path: Path):
     """
     Imports Relation objects from CIT relations data.
     """
     workplace_map = _get_workplace_mapping(store_path)
     cit_id_to_person_id = _get_cit_id_to_person_id_mapping(store_path)
+    titles = _get_job_titles(store_path)
 
     with (store_path / "relations.json").open() as f:
-        relations: dict = json.load(f)
+        relations: dict[str, CIT_Relation] = json.load(f)
 
     present_ids = set()
     for relation in relations.values():
@@ -232,12 +271,14 @@ def import_relations(store_path: Path):
             )
             continue
 
+        title = titles.get(int(relation["job_title_id"]), {})
         obj, _ = Relation.objects.update_or_create(
             person_id=person_id,
             cit_id=relation["id"],
             defaults={
                 "workplace_id": workplace_id,
-                "job_title": relation["job_title_id"],  # TODO: real job
+                "job_title_sk": title.get("sk", ""),
+                "job_title_en": title.get("en", ""),
             },
         )
         present_ids.add(obj.id)
@@ -255,7 +296,7 @@ def import_workplaces(store_path: Path):
     workplace_cit_to_id = {w.cit_id: w.id for w in Workplace.objects.all()}
 
     with (store_path / "workplaces.json").open() as f:
-        workplaces: dict = json.load(f)
+        workplaces: dict[str, CIT_Workplace] = json.load(f)
 
     for workplace in workplaces.values():
         workplace_id = workplace["id"]
