@@ -56,7 +56,7 @@ CIT_Workplace = TypedDict(
     "CIT_Workplace",
     {
         "id": int,
-        "parent": str,
+        "parent": str | None,
         "cdo_id": str,
         "treePath": str,
         "localization": dict[str, CIT_WorkplaceLocalization],

@@ -40,7 +40,8 @@ CONTACT_MAPPING = {
     "6": "room",
 }
 LANGUAGE_MAPPING = {"sk_SK": LanguageChoices.SK, "en_EN": LanguageChoices.EN}
-FMFI_WORKPLACE_ID = 506
+WORKPLACE_KEYWORDS = ["fakulta", "katedra", "centrum", "univerzita"]
+WORKPLACE_TITLES = ["dekanát"]
 
 
 def download_exports(store_path: Path):
@@ -289,25 +290,45 @@ def import_relations(store_path: Path):
         to_delete.delete()
 
 
+def _filter_workplaces(store_path: Path) -> list[CIT_Workplace]:
+    with (store_path / "workplaces.json").open() as f:
+        workplaces: dict[str, CIT_Workplace] = json.load(f)
+
+    filtered_ids = set()
+    for workplace in workplaces.values():
+        title = workplace["localization"].get("sk_SK", {}).get("title", "").casefold()
+        if any(keyword in title for keyword in WORKPLACE_KEYWORDS):
+            filtered_ids.add(workplace["id"])
+
+        if any(full_title == title for full_title in WORKPLACE_TITLES):
+            filtered_ids.add(workplace["id"])
+
+    filtered: list[CIT_Workplace] = []
+    for workplace in workplaces.values():
+        if workplace["id"] not in filtered_ids:
+            continue
+        tree_path = [
+            item
+            for item in workplace["treePath"].split(",")
+            if int(item) in filtered_ids
+        ]
+        workplace["parent"] = tree_path[-2] if len(tree_path) > 1 else None
+        workplace["treePath"] = ",".join(tree_path)
+        filtered.append(workplace)
+
+    return filtered
+
+
 def import_workplaces(store_path: Path):
     """
     Imports Workplace objects from CIT data.
     """
     workplace_cit_to_id = {w.cit_id: w.id for w in Workplace.objects.all()}
 
-    with (store_path / "workplaces.json").open() as f:
-        workplaces: dict[str, CIT_Workplace] = json.load(f)
-
-    for workplace in workplaces.values():
+    workplaces = _filter_workplaces(store_path)
+    touched_ids = set()
+    for workplace in workplaces:
         workplace_id = workplace["id"]
-        tree_path = list(map(int, workplace["treePath"].split(",")[::-1]))
-
-        allowed_path_length = 2
-        if FMFI_WORKPLACE_ID in tree_path:
-            allowed_path_length = 3
-
-        if len(tree_path) > allowed_path_length:
-            continue
 
         parent = None
         if workplace["parent"]:
@@ -326,3 +347,8 @@ def import_workplaces(store_path: Path):
             },
         )
         workplace_cit_to_id[obj.cit_id] = obj.id
+        touched_ids.add(obj.id)
+
+    orphans = Workplace.objects.exclude(id__in=touched_ids).values_list("id", flat=True)
+    if orphans:
+        logger.info(f"Orphaned Workplace objects: {', '.join(map(str, orphans))}.")
