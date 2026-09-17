@@ -324,6 +324,9 @@ def import_workplaces(store_path: Path):
     Imports Workplace objects from CIT data.
     """
     workplace_cit_to_id = {w.cit_id: w.id for w in Workplace.objects.all()}
+    overriden_ids: set[int] = set(
+        Workplace.objects.filter(is_overriden=True).values_list("cit_id", flat=True)
+    )
 
     workplaces = _filter_workplaces(store_path)
     touched_ids = set()
@@ -338,13 +341,17 @@ def import_workplaces(store_path: Path):
                     f"Workplace {workplace['id']} does not have parent in our DB."
                 )
 
+        defaults = {"parent_id": parent}
+        if workplace_id not in overriden_ids:
+            defaults["name_en"] = (
+                workplace["localization"].get("en_EN", {}).get("title", "")
+            )
+            defaults["name_sk"] = (
+                workplace["localization"].get("sk_SK", {}).get("title", "")
+            )
+
         obj, _ = Workplace.objects.update_or_create(
-            cit_id=workplace_id,
-            defaults={
-                "name_en": workplace["localization"].get("en_EN", {}).get("title", ""),
-                "name_sk": workplace["localization"].get("sk_SK", {}).get("title", ""),
-                "parent_id": parent,
-            },
+            cit_id=workplace_id, defaults=defaults
         )
         workplace_cit_to_id[obj.cit_id] = obj.id
         touched_ids.add(obj.id)

@@ -114,8 +114,11 @@ class Workplace(models.Model):
     )
     parent_id: int
     cit_id = models.BigIntegerField(unique=True)
-    name_sk = models.CharField(max_length=128)
-    name_en = models.CharField(max_length=128)
+    name_sk = models.CharField(max_length=128, blank=True)
+    name_en = models.CharField(max_length=128, blank=True)
+    is_overriden = models.BooleanField(
+        default=False, help_text="Do not update names during imports."
+    )
     address = models.TextField(blank=True)
 
     def __str__(self) -> str:
