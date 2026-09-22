@@ -44,17 +44,44 @@
     {% endfor %}
   </ul>
 
-  <h2 class="mt-6">{% translate "Timetable" %}</h2>
-
-  <div class="alert alert--info">TODO: candle</div>
-
-  <a href="https://candle.fmph.uniba.sk/ucitelia/{{ person.login }}" target="_blank" class="btn btn--ghost">
-    Candle
-    <iconify-icon icon="lucide:external-link"></iconify-icon>
-  </a>
-
   <h2 class="mt-6">{% translate "Selected publications" %}</h2>
 
   <div class="alert alert--info">TODO: vupch</div>
 
+  {% if timetable %}
+    <h2 class="mt-6">{% translate "Timetable" %}</h2>
+
+    <table class="table mb-4">
+      <thead>
+        <tr>
+          <th>{% translate "Day" %}</th>
+          <th>{% translate "Time" %}</th>
+          <th>{% translate "Room" %}</th>
+          <th>{% translate "Form" %}</th>
+          <th colspan=2>{% translate "Course" %}</th>
+          <th>{% translate "Lecturers" %}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for lesson in timetable %}
+          <tr>
+            <td>{{ lesson.get_day_of_week_display }}</td>
+            <td>{{ lesson.start_time|date:"H:i" }} - {{ lesson.end_time|date:"H:i" }}</td>
+            <td>{{ lesson.room }}</td>
+            <td>{{ lesson.type }}</td>
+            <td>{{ lesson.subject_code }}</td>
+            <td>{{ lesson.subject_name }}</td>
+            <td>{{ lesson.teachers }}</td>
+            <td>{{ lesson.note }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <a href="https://candle.fmph.uniba.sk/ucitelia/{{ person.login }}" target="_blank" class="btn btn--ghost">
+      Candle
+      <iconify-icon icon="lucide:external-link"></iconify-icon>
+    </a>
+  {% endif %}
 {% endblock container %}

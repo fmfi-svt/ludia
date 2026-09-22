@@ -3,6 +3,7 @@ from django.contrib import admin
 from ludia.contacts.models import (
     Contact,
     ContactType,
+    Lesson,
     Person,
     Relation,
     Source,
@@ -19,10 +20,14 @@ class RelationInline(admin.TabularInline):
     autocomplete_fields = ["workplace"]
 
 
+class LessonInline(admin.TabularInline):
+    model = Lesson
+
+
 @admin.register(Person)
 class PersonAdmin(admin.ModelAdmin):
     search_fields = ["first_name", "last_name", "middle_name", "university_id", "login"]
-    inlines = [ContactInline, RelationInline]
+    inlines = [ContactInline, RelationInline, LessonInline]
 
 
 @admin.register(ContactType)

@@ -12,6 +12,7 @@ def person_profile(request, login):
         .filter(Q(language="") | Q(language=get_language()))
         .select_related("contact_type")
     )
+    timetable = person.lesson_set.all()
 
     return render(
         request,
@@ -19,5 +20,6 @@ def person_profile(request, login):
         {
             "person": person,
             "contacts": contacts,
+            "timetable": timetable,
         },
     )

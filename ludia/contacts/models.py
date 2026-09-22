@@ -1,8 +1,12 @@
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from django.db import connection, models
+from django.utils.dates import WEEKDAYS_ABBR
 from django.utils.translation import get_language
+
+if TYPE_CHECKING:
+    from django.db.models.manager import RelatedManager
 
 
 def get_translation(obj: Any, key: str, language: str | None = None) -> Any:
@@ -37,6 +41,8 @@ class Person(models.Model):
     first_name = models.CharField(max_length=128, blank=True)
     middle_name = models.CharField(max_length=128, blank=True)
     last_name = models.CharField(max_length=128, blank=True)
+
+    lesson_set: "RelatedManager[Lesson]"
 
     def __str__(self) -> str:
         return self.full_name
@@ -191,3 +197,38 @@ class Relation(models.Model):
         }
         data["name"] = get_translation(data, "name")
         return data
+
+
+class Lesson(models.Model):
+    class DayChoices(models.IntegerChoices):
+        MON = 0, WEEKDAYS_ABBR[0]
+        TUE = 1, WEEKDAYS_ABBR[1]
+        WED = 2, WEEKDAYS_ABBR[2]
+        THU = 3, WEEKDAYS_ABBR[3]
+        FRI = 4, WEEKDAYS_ABBR[4]
+        SAT = 5, WEEKDAYS_ABBR[5]
+        SUN = 6, WEEKDAYS_ABBR[6]
+
+    id: int
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    person_id: int
+
+    candle_id = models.IntegerField()
+    day_of_week = models.IntegerField(choices=DayChoices.choices)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+
+    teachers = models.CharField(max_length=512, blank=True)
+    type = models.CharField(max_length=30, blank=True)
+    room = models.CharField(max_length=30, blank=True)
+    subject_name = models.CharField(max_length=100, blank=True)
+    subject_code = models.CharField(max_length=20, blank=True)
+    note = models.CharField(max_length=240, blank=True)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["day_of_week", "start_time", "subject_code"]
+
+    def __str__(self):
+        return self.subject_name
