@@ -439,6 +439,7 @@ dependencies = [
     { name = "environs", extra = ["django"] },
     { name = "gunicorn" },
     { name = "mozilla-django-oidc" },
+    { name = "phonenumbers" },
     { name = "psycopg", extra = ["binary"] },
     { name = "sentry-sdk" },
 ]
@@ -456,6 +457,7 @@ requires-dist = [
     { name = "environs", extras = ["django"], specifier = ">=14.1.1" },
     { name = "gunicorn", specifier = ">=23.0.0" },
     { name = "mozilla-django-oidc", specifier = ">=4.0.1" },
+    { name = "phonenumbers", specifier = ">=9.0.40" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2.9" },
     { name = "sentry-sdk", specifier = ">=2.29.1" },
 ]
@@ -482,6 +484,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/04/5e/d5906dc016253d248eabf3608a6bbfd0df75a993a467cf7cf0a0c7f2b18a/mozilla_django_oidc-5.0.2.tar.gz", hash = "sha256:4e953dcd963c036daaa2ac42b5bb6ea89a1c6ea7be0387c2022a59aca2f83043", size = 57360, upload-time = "2025-12-19T16:11:40.685Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a8/a9/c1664acf30ef0031ed06650039de1693bddf4cf7f58e07939e1aa80bffb7/mozilla_django_oidc-5.0.2-py3-none-any.whl", hash = "sha256:965a3533b0e299288cdf38ec2f8b550217c302ffe78ce5bd0b2d2f4bc436878b", size = 25910, upload-time = "2025-12-19T16:11:39.729Z" },
+]
+
+[[package]]
+name = "phonenumbers"
+version = "9.0.40"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b4/39/66db12a16eec873aa12411fc6da0fe052a86413fe117e208b51836b41740/phonenumbers-9.0.40.tar.gz", hash = "sha256:a0dd1bc98efa0b6f5839c7b1fface2ebdf0a811645dd8211ae3f037a17ec07ac", size = 2311069, upload-time = "2026-09-24T06:59:03.882Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/74/da/c266478ebea2b8d3176484e06756960d94d27cce2d7dc5ca3be6151cb9e3/phonenumbers-9.0.40-py2.py3-none-any.whl", hash = "sha256:189c028c4acd41ee80782e50f74a91260bd76d9115c83be94302509e1cdb5e84", size = 2594747, upload-time = "2026-09-24T06:59:00.564Z" },
 ]
 
 [[package]]

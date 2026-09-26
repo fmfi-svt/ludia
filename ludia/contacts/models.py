@@ -6,6 +6,8 @@ from django.db.models import Q
 from django.utils.dates import WEEKDAYS_ABBR
 from django.utils.translation import get_language
 
+from ludia.contacts.rendering import render_contact
+
 if TYPE_CHECKING:
     from django.db.models.manager import RelatedManager
 
@@ -123,10 +125,13 @@ class Contact(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["contact_type", "source"]
+        ordering = ["contact_type", "source", "value"]
 
     def __str__(self) -> str:
         return self.value
+
+    def render(self):
+        return render_contact(self)
 
 
 class Workplace(models.Model):

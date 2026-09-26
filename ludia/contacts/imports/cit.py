@@ -35,9 +35,16 @@ EXPORT_DOWNLOAD_LIST = [
     "sap_job_titles",
 ]
 CONTACT_MAPPING = {
-    "2": "email",
     "1": "phone",
+    "2": "email",
+    "3": None,  # poznámka
+    "4": None,  # fotka
     "6": "room",
+    "7": "website",
+    "8": "website",  # social
+    "9": "phone",  # voip
+    "10": None,  # consultation_hours
+    "11": "phone",  # uniba_voip
 }
 LANGUAGE_MAPPING = {"sk_SK": LanguageChoices.SK, "en_EN": LanguageChoices.EN}
 WORKPLACE_KEYWORDS = ["fakulta", "katedra", "centrum", "univerzita"]
