@@ -12,37 +12,51 @@
     <link rel="alternate" href="https://{{ request.get_host }}{% url "profile" person.login %}" hreflang="{{ lang_code }}">
     {% endlanguage %}
   {% endfor %}
+  <style>
+    .grid.profile-header { grid-template-columns: 3fr 1fr; }
+    .profile-header__image { justify-self: end; width: 200px; height: 300px; }
+    @media (max-width: 48em) {
+      .grid.profile-header { grid-template-columns: 1fr; }
+      .profile-header__image { justify-self: center; grid-row: 1; }
+    }
+  </style>
+
 {% endblock head %}
 
 {% block container %}
-  <img src="https://sluzby.fmph.uniba.sk/f/{{ person.login }}" style="float: right" />
-  <h1>{{ person }}</h1>
+  <div class="grid profile-header">
+    <div>
+      <h1>{{ person }}</h1>
 
-  {% for relation in person.relation_set.all %}
-  <p>
-    {{ relation.job_title }}<br>
-    {% with workplaces=relation.all_workplaces %}
-      {{ workplaces.name|linebreaksbr }}
-      {% if workplaces.address %}
-        <br>{{ workplaces.address|linebreaksbr }}
-      {% endif %}
-    {% endwith %}
-  </p>
-  {% endfor %}
+      {% for relation in person.relation_set.all %}
+      <p>
+        {{ relation.job_title }}<br>
+        {% with workplaces=relation.all_workplaces %}
+          {{ workplaces.name|linebreaksbr }}
+          {% if workplaces.address %}
+            <br>{{ workplaces.address|linebreaksbr }}
+          {% endif %}
+        {% endwith %}
+      </p>
+      {% endfor %}
 
-  <ul class="list-unstyled list-unstyled--tight mt-4">
-    {% for contact in contacts %}
-    <li class="list-item--icon">
-      {% if contact.contact_type.icon %}
-        <iconify-icon icon="{{ contact.contact_type.icon }}" aria-hidden="true" title="{{ contact.contact_type.name }}"></iconify-icon>
-      {% else %}
-        <b>{{ contact.contact_type.name }}:</b>
-      {% endif %}
+      <ul class="list-unstyled list-unstyled--tight mt-4">
+        {% for contact in contacts %}
+        <li class="list-item--icon">
+          {% if contact.contact_type.icon %}
+            <iconify-icon icon="{{ contact.contact_type.icon }}" aria-hidden="true" title="{{ contact.contact_type.name }}"></iconify-icon>
+          {% else %}
+            <b>{{ contact.contact_type.name }}:</b>
+          {% endif %}
 
-      {{ contact.value }}
-    </li>
-    {% endfor %}
-  </ul>
+          {{ contact.value }}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <img class="profile-header__image" src="https://sluzby.fmph.uniba.sk/f/{{ person.login }}" alt="{{ person }}">
+  </div>
 
   <h2 class="mt-6">{% translate "Selected publications" %}</h2>
 
@@ -51,8 +65,9 @@
   {% if timetable %}
     <h2 class="mt-6">{% translate "Timetable" %}</h2>
 
-    <table class="table mb-4">
-      <thead>
+    <div class="table-scroll mb-4">
+      <table class="table">
+        <thead>
         <tr>
           <th>{% translate "Day" %}</th>
           <th>{% translate "Time" %}</th>
@@ -67,17 +82,18 @@
         {% for lesson in timetable %}
           <tr>
             <td>{{ lesson.get_day_of_week_display }}</td>
-            <td>{{ lesson.start_time|date:"H:i" }} - {{ lesson.end_time|date:"H:i" }}</td>
-            <td>{{ lesson.room }}</td>
+            <td style="white-space: nowrap">{{ lesson.start_time|date:"H:i" }} - {{ lesson.end_time|date:"H:i" }}</td>
+            <td style="white-space: nowrap">{{ lesson.room }}</td>
             <td>{{ lesson.type }}</td>
-            <td>{{ lesson.subject_code }}</td>
+            <td style="white-space: nowrap">{{ lesson.subject_code }}</td>
             <td>{{ lesson.subject_name }}</td>
             <td>{{ lesson.teachers }}</td>
             <td>{{ lesson.note }}</td>
           </tr>
         {% endfor %}
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
 
     <a href="https://candle.fmph.uniba.sk/ucitelia/{{ person.login }}" target="_blank" class="btn btn--ghost">
       Candle
