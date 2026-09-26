@@ -2,6 +2,7 @@ import re
 from typing import TYPE_CHECKING, Any
 
 from django.db import connection, models
+from django.db.models import Q
 from django.utils.dates import WEEKDAYS_ABBR
 from django.utils.translation import get_language
 
@@ -43,6 +44,7 @@ class Person(models.Model):
     last_name = models.CharField(max_length=128, blank=True)
 
     lesson_set: "RelatedManager[Lesson]"
+    contact_set: "RelatedManager[Contact]"
 
     def __str__(self) -> str:
         return self.full_name
@@ -55,6 +57,23 @@ class Person(models.Model):
         if self.title_after:
             name = f"{name}, {self.title_after}"
         return re.sub(r"\s+", " ", name)
+
+    def get_contacts(self, language: str | None = None) -> list["Contact"]:
+        if language is None:
+            language = get_language()
+
+        contacts = self.contact_set.filter(
+            Q(language="") | Q(language=language)
+        ).select_related("contact_type")
+        seen_contact_values = set()
+        return [
+            contact
+            for contact in contacts
+            if not (
+                contact.value in seen_contact_values
+                or seen_contact_values.add(contact.value)
+            )
+        ]
 
 
 class ContactType(models.Model):
