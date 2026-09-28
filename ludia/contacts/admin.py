@@ -5,6 +5,7 @@ from ludia.contacts.models import (
     ContactType,
     Lesson,
     Person,
+    Publication,
     Relation,
     Source,
     Workplace,
@@ -24,10 +25,14 @@ class LessonInline(admin.TabularInline):
     model = Lesson
 
 
+class PublicationInline(admin.TabularInline):
+    model = Publication
+
+
 @admin.register(Person)
 class PersonAdmin(admin.ModelAdmin):
     search_fields = ["first_name", "last_name", "middle_name", "university_id", "login"]
-    inlines = [ContactInline, RelationInline, LessonInline]
+    inlines = [ContactInline, RelationInline, LessonInline, PublicationInline]
 
 
 @admin.register(ContactType)

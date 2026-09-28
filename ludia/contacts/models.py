@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING, Any
 from django.db import connection, models
 from django.db.models import Q
 from django.utils.dates import WEEKDAYS_ABBR
+from django.utils.html import escape, format_html
+from django.utils.safestring import SafeString
 from django.utils.translation import get_language
 
 from ludia.contacts.rendering import render_contact
@@ -39,6 +41,8 @@ class Person(models.Model):
     id: int
     university_id = models.BigIntegerField(verbose_name="UOČ", unique=True)
     login = models.CharField(max_length=128, unique=True)
+    orcid = models.CharField(max_length=128, blank=True)
+    vupch_url = models.CharField(max_length=256, blank=True)
     title_before = models.CharField(max_length=128, blank=True)
     title_after = models.CharField(max_length=128, blank=True)
     first_name = models.CharField(max_length=128, blank=True)
@@ -47,6 +51,7 @@ class Person(models.Model):
 
     lesson_set: "RelatedManager[Lesson]"
     contact_set: "RelatedManager[Contact]"
+    publication_set: "RelatedManager[Publication]"
 
     def __str__(self) -> str:
         return self.full_name
@@ -256,3 +261,32 @@ class Lesson(models.Model):
 
     def __str__(self):
         return self.subject_name
+
+
+class Publication(models.Model):
+    id: int
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    person_id: int
+    raw_text = models.TextField()
+    display_text = models.TextField(blank=True)
+    doi = models.CharField(max_length=256, blank=True)
+
+    class Meta:
+        ordering = ["display_text"]
+
+    def __str__(self) -> str:
+        return self.render_text()
+
+    def render_text(self) -> str:
+        return self.display_text or self.raw_text
+
+    def render(self) -> SafeString:
+        text = self.render_text()
+        if not self.doi:
+            return escape(text)
+
+        return format_html(
+            '<a href="https://doi.org/{}" target="_blank" rel="noopener noreferrer">{}</a>',
+            self.doi,
+            text,
+        )
