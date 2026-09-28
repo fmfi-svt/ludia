@@ -49,6 +49,21 @@ CONTACT_MAPPING = {
 LANGUAGE_MAPPING = {"sk_SK": LanguageChoices.SK, "en_EN": LanguageChoices.EN}
 WORKPLACE_KEYWORDS = ["fakulta", "katedra", "centrum", "univerzita"]
 WORKPLACE_TITLES = ["dekanát"]
+DOCTORAL_JOB_TYPE_ID = "5"
+SAP_JOB_TITLE_REWRITES = [
+    ("profesor", "profesor", "professor"),
+    ("docent", "docent", "associate professor"),
+    ("vedecký", "vedecký pracovník", "researcher"),
+    ("odborný asistent", "odborný asistent", "assistant professor"),
+    ("technický asistent", "technický asistent", "technical assistant"),
+    ("sekretár", "administratívny pracovník", "administrative worker"),
+    ("tajomník", "tajomník", "secretary"),
+    (
+        "dekan, prodekan",
+        "vedenie fakulty (prodekani, dekan)",
+        "faculty leadership (vice-deans, dean)",
+    ),
+]
 
 
 def download_exports(store_path: Path):
@@ -225,6 +240,14 @@ def _get_workplace_mapping(store_path: Path) -> dict[int, int]:
     return cit_workplaces
 
 
+def _rewrite_sap_job_title(sap_title: str) -> dict[str, str]:
+    for match, title_sk, title_en in SAP_JOB_TITLE_REWRITES:
+        if match in sap_title:
+            return {"sk": title_sk, "en": title_en}
+
+    return {"sk": sap_title, "en": sap_title}
+
+
 def _get_job_titles(store_path: Path) -> dict[int, dict[str, str]]:
     """
     Returns mapping between job_title_id and the real job title (both translations).
@@ -242,12 +265,12 @@ def _get_job_titles(store_path: Path) -> dict[int, dict[str, str]]:
 
     for title in title_data.values():
         sap_title = sap_titles.get(title["sap_text_hash"], "")
-        titles[title["id"]] = {
-            "en": title["localization"].get("en_EN", {}).get("long_job_title", ""),
-            "sk": title["localization"]
-            .get("sk_SK", {})
-            .get("long_job_title", sap_title),
-        }
+        title_sk = title["localization"].get("sk_SK", {}).get("long_job_title", "")
+        title_en = title["localization"].get("en_EN", {}).get("long_job_title", "")
+        if title_sk and title_en:
+            titles[title["id"]] = {"sk": title_sk, "en": title_en}
+        else:
+            titles[title["id"]] = _rewrite_sap_job_title(sap_title)
 
     return titles
 
@@ -279,7 +302,10 @@ def import_relations(store_path: Path):
             )
             continue
 
-        title = titles.get(int(relation["job_title_id"]), {})
+        if relation["job_type_id"] == DOCTORAL_JOB_TYPE_ID:
+            title = {"sk": "doktorand", "en": "PhD student"}
+        else:
+            title = titles.get(int(relation["job_title_id"]), {})
         obj, _ = Relation.objects.update_or_create(
             person_id=person_id,
             cit_id=relation["id"],
