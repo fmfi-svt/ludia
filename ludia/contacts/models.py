@@ -14,6 +14,17 @@ if TYPE_CHECKING:
     from django.db.models.manager import RelatedManager
 
 
+LESSON_FORM_TRANSLATIONS = {
+    "Cvičenie": "Tutorial",
+    "Kurz": "Course",
+    "Labák": "Lab",
+    "Nezadaný typ": "Unspecified",
+    "Prednáška": "Lecture",
+    "Seminár": "Seminar",
+    "Výber/Vol": "Elective",
+}
+
+
 def get_translation(obj: Any, key: str, language: str | None = None) -> Any:
     if language is None:
         language = get_language()
@@ -261,6 +272,12 @@ class Lesson(models.Model):
 
     def __str__(self):
         return self.subject_name
+
+    @property
+    def type_display(self) -> str:
+        if get_language() == "en":
+            return LESSON_FORM_TRANSLATIONS.get(self.type, self.type)
+        return self.type
 
 
 class Publication(models.Model):
