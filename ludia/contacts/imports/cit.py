@@ -72,7 +72,10 @@ def download_exports(store_path: Path):
     """
     resp = requests.post(
         EXPORT_URL,
-        auth=(settings.CIT_API_USERNAME, settings.CIT_API_PASSWORD),
+        data={
+            "username": settings.CIT_API_USERNAME,
+            "password": settings.CIT_API_PASSWORD,
+        },
         timeout=30,
     )
     resp.raise_for_status()
