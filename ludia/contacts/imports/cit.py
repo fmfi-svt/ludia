@@ -1,5 +1,6 @@
 import json
 import logging
+from collections import Counter
 from pathlib import Path
 
 import requests
@@ -191,27 +192,28 @@ def import_contacts(store_path: Path):
         contacts: dict[str, dict[str, CIT_Contact]] = json.load(f)
 
     present_ids = set()
+    missing_contact_types: Counter[str] = Counter()
     for key in contact_keys:
         for contact in contacts[key].values():
             language = LANGUAGE_MAPPING.get(contact["language"], "")
             value = str(contact["value"])
 
-            person_id = wuser_id_to_person_id.get(int(contact["workplace_user_id"]))
-            if not person_id:
-                logger.warning(
-                    f"CIT workplace_user_id {contact['workplace_user_id']} does not have a related Person."
-                )
-                continue
-
             contact_type_identifier = CONTACT_MAPPING.get(contact["contact_type_id"])
             if not contact_type_identifier:
                 continue
 
+            person_id = wuser_id_to_person_id.get(int(contact["workplace_user_id"]))
+            if not person_id:
+                logger.debug(
+                    "Skipping CIT contact %s: workplace_user_id %s has no mapped Person.",
+                    contact["id"],
+                    contact["workplace_user_id"],
+                )
+                continue
+
             contact_type_id = contact_type_map.get(contact_type_identifier)
             if not contact_type_id:
-                logger.warning(
-                    f"Contact type {contact_type_identifier} not found in our database."
-                )
+                missing_contact_types[contact_type_identifier] += 1
                 continue
 
             obj, _ = Contact.objects.update_or_create(
@@ -226,9 +228,16 @@ def import_contacts(store_path: Path):
             )
             present_ids.add(obj.id)
 
+    for identifier, count in missing_contact_types.items():
+        logger.warning(
+            "Contact type %s not found in our database; skipped %s CIT contacts.",
+            identifier,
+            count,
+        )
+
     to_delete = Contact.objects.filter(source=source).exclude(id__in=present_ids)
     if count := to_delete.count():
-        logger.warning(f"Deleting {count} orphaned Contact objects.")
+        logger.info(f"Deleting {count} orphaned Contact objects.")
         to_delete.delete()
 
 
@@ -304,15 +313,17 @@ def import_relations(store_path: Path):
     for relation in relations.values():
         workplace_id = workplace_map.get(int(relation["workplace_id"]))
         if not workplace_id:
-            logger.warning(
-                f"User {relation['user_id']} does not have valid workplace for ID {relation['workplace_id']}."
+            logger.debug(
+                "Skipping CIT relation %s: workplace %s has no mapped Workplace.",
+                relation["id"],
+                relation["workplace_id"],
             )
             continue
 
         person_id = cit_id_to_person_id.get(int(relation["user_id"]))
         if not person_id:
             logger.warning(
-                f"CIT user {relation['user_id']} found in relations.json but not in users.json"
+                f"CIT relation {relation['id']} has a mapped workplace but no mapped Person for user {relation['user_id']}."
             )
             continue
 
@@ -333,7 +344,7 @@ def import_relations(store_path: Path):
 
     to_delete = Relation.objects.exclude(id__in=present_ids)
     if count := to_delete.count():
-        logger.warning(f"Deleting {count} orphaned Relation objects.")
+        logger.info(f"Deleting {count} orphaned Relation objects.")
         to_delete.delete()
 
 
