@@ -4,7 +4,7 @@ from .models import User
 
 
 def logout_url(request):
-    return "https://id.trojsten.sk/oauth/logout"
+    return "https://idp.uniba.sk/idp/logout"
 
 
 class OIDC(OIDCAuthenticationBackend):
