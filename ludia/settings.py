@@ -99,6 +99,7 @@ LANGUAGES = [
 ]
 TIME_ZONE = "Europe/Bratislava"
 USE_I18N = True
+LOCALE_PATHS = [BASE_DIR / "ludia" / "locale"]
 USE_TZ = True
 
 STATIC_URL = "static/"

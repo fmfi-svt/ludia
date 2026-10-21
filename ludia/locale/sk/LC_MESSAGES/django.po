@@ -1,0 +1,107 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: ludia 2000.1\n"
+"Report-Msgid-Bugs-To: fmfi-svt@googlegroups.com\n"
+"POT-Creation-Date: 2026-10-22 00:33+0200\n"
+"PO-Revision-Date: 2026-10-22 00:37+0200\n"
+"Last-Translator: ŠVT FMFI UK <fmfi-svt@googlegroups.com>\n"
+"Language-Team: Slovak <fmfi-svt@googlegroups.com>\n"
+"Language: sk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n == 1 ? 0 : n % 1 == 0 && n >= 2 && n <= 4 ? 1 : n % 1 != 0 ? 2: 3);\n"
+
+#: ludia/contacts/templates/people.html:4
+#: ludia/contacts/templates/people.html:7
+msgid "Faculty directory"
+msgstr "Adresár fakulty"
+
+#: ludia/contacts/templates/people.html:8
+msgid "Find people at the Faculty of Mathematics, Physics and Informatics, Comenius University, and view their contact details, affiliations, publications, and timetables."
+msgstr "Vyhľadajte ľudí na Fakulte matematiky, fyziky a informatiky Univerzity Komenského a pozrite si ich kontaktné údaje, pracoviská, publikácie a rozvrhy."
+
+#: ludia/contacts/templates/people.html:11
+msgid "Search people"
+msgstr "Vyhľadať osobu"
+
+#: ludia/contacts/templates/people.html:14
+msgid "Search"
+msgstr "Hľadať"
+
+#: ludia/contacts/templates/people.html:18
+msgid "Search the whole university"
+msgstr "Hľadať na celej univerzite"
+
+#: ludia/contacts/templates/people.html:23
+#, python-format
+msgid "%(total)s result"
+msgid_plural "%(total)s results"
+msgstr[0] "%(total)s výsledok"
+msgstr[1] "%(total)s výsledky"
+msgstr[2] "%(total)s výsledku"
+msgstr[3] "%(total)s výsledkov"
+
+#: ludia/contacts/templates/people.html:31
+msgid "Name"
+msgstr "Meno"
+
+#: ludia/contacts/templates/people.html:44
+msgid "No people match your search."
+msgstr "Vyhľadávaniu nezodpovedajú žiadne osoby."
+
+#: ludia/contacts/templates/people.html:44
+msgid "No people are available yet."
+msgstr "Adresár zatiaľ neobsahuje žiadne osoby."
+
+#: ludia/contacts/templates/people.html:48
+msgid "Pagination"
+msgstr "Stránkovanie"
+
+#: ludia/contacts/templates/people.html:50
+msgid "Previous"
+msgstr "Predchádzajúca"
+
+#: ludia/contacts/templates/people.html:62
+msgid "Next"
+msgstr "Nasledujúca"
+
+#: ludia/contacts/templates/person.html:73
+msgid "Selected publications"
+msgstr "Vybrané publikácie"
+
+#: ludia/contacts/templates/person.html:88
+msgid "Timetable"
+msgstr "Rozvrh"
+
+#: ludia/contacts/templates/person.html:94
+msgid "Day"
+msgstr "Deň"
+
+#: ludia/contacts/templates/person.html:95
+msgid "Time"
+msgstr "Čas"
+
+#: ludia/contacts/templates/person.html:96
+msgid "Room"
+msgstr "Miestnosť"
+
+#: ludia/contacts/templates/person.html:97
+msgid "Form"
+msgstr "Forma"
+
+#: ludia/contacts/templates/person.html:98
+msgid "Course"
+msgstr "Predmet"
+
+#: ludia/contacts/templates/person.html:99
+msgid "Lecturers"
+msgstr "Vyučujúci"
+
+#: ludia/settings.py:97
+msgid "English"
+msgstr "angličtina"
+
+#: ludia/settings.py:98
+msgid "Slovak"
+msgstr "slovenčina"
