@@ -4,6 +4,7 @@ from pathlib import Path
 
 import requests
 from django.conf import settings
+from django.core.management.base import CommandError
 
 from ludia.contacts.imports.cit_types import (
     CIT_Contact,
@@ -89,11 +90,21 @@ def download_exports(store_path: Path):
             "/data/exports_v2//data/exports_v2/", "/data/exports_v2/"
         )  # FIXME: remove after upstream fix
 
-        resp = requests.get(url)
-        resp.raise_for_status()
-        with (store_path / f"{export}.json").open("wb") as f:
-            for chunk in resp.iter_content(chunk_size=512):
-                f.write(chunk)
+        export_path = store_path / f"{export}.json"
+        with requests.get(url, stream=True, timeout=60) as resp:
+            resp.raise_for_status()
+            with export_path.open("wb") as f:
+                for chunk in resp.iter_content(chunk_size=64 * 1024):
+                    f.write(chunk)
+
+        # Validate every export
+        try:
+            with export_path.open("rb") as f:
+                json.load(f)
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            raise CommandError(
+                f"CIT export {export}.json is not valid JSON: {exc}."
+            ) from exc
 
 
 def import_people(store_path: Path):
@@ -310,9 +321,9 @@ def import_relations(store_path: Path):
         else:
             title = titles.get(int(relation["job_title_id"]), {})
         obj, _ = Relation.objects.update_or_create(
-            person_id=person_id,
             cit_id=relation["id"],
             defaults={
+                "person_id": person_id,
                 "workplace_id": workplace_id,
                 "job_title_sk": title.get("sk", ""),
                 "job_title_en": title.get("en", ""),
