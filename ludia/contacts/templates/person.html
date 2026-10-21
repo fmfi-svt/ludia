@@ -28,10 +28,12 @@
     <div>
       <h1>{{ person }}</h1>
 
-      {% for relation in person.relation_set.all %}
+      {% for affiliation in affiliations %}
       <p>
-        {{ relation.job_title }}<br>
-        {% with workplaces=relation.all_workplaces %}
+        {% if affiliation.job_titles %}
+          {{ affiliation.job_titles|join:"; " }}<br>
+        {% endif %}
+        {% with workplaces=affiliation.workplaces %}
           {{ workplaces.name|linebreaksbr }}
           {% if workplaces.address %}
             <br>{{ workplaces.address|linebreaksbr }}
