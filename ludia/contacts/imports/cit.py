@@ -53,7 +53,8 @@ CONTACT_MAPPING = {
 LANGUAGE_MAPPING = {"sk_SK": LanguageChoices.SK, "en_EN": LanguageChoices.EN}
 WORKPLACE_KEYWORDS = ["fakulta", "katedra", "centrum", "univerzita"]
 WORKPLACE_TITLES = ["dekanát"]
-DOCTORAL_JOB_TYPE_ID = "5"
+# CIT has a parent PhD category plus full-time and external subcategories.
+DOCTORAL_JOB_TYPE_IDS = {"5", "6", "7"}
 SAP_JOB_TITLE_REWRITES = [
     ("profesor", "profesor", "professor"),
     ("docent", "docent", "associate professor"),
@@ -329,7 +330,7 @@ def import_relations(store_path: Path):
             )
             continue
 
-        if relation["job_type_id"] == DOCTORAL_JOB_TYPE_ID:
+        if relation["job_type_id"] in DOCTORAL_JOB_TYPE_IDS:
             title = {"sk": "doktorand", "en": "PhD student"}
         else:
             title = titles.get(int(relation["job_title_id"]), {})
