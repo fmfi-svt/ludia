@@ -1,0 +1,15 @@
+{
+  "301": {
+    "id": 301,
+    "id_2": "",
+    "sap_text_hash": "study",
+    "localization": {
+      "sk_SK": {
+        "long_job_title": "1.dINF"
+      },
+      "en_EN": {
+        "long_job_title": "1.dINF"
+      }
+    }
+  }
+}

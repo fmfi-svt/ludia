@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osoba>
+  <popisOsoby><kod>I.11</kod><text>https://orcid.org/0000-0002-1825-0097</text></popisOsoby>
+  <popisOsoby><kod>VI.2</kod><text>Other outputs</text></popisOsoby>
+  <popisOsoby><text>Not a selected publication</text></popisOsoby>
+  <popisOsoby><kod>VI.3</kod><text>Selected publications</text></popisOsoby>
+  <popisOsoby><text><![CDATA[<b>Nováková, J.</b> A sample paper. https://doi.org/10.1234/example.]]></text></popisOsoby>
+  <popisOsoby><text>A second paper without a DOI.</text></popisOsoby>
+  <popisOsoby><kod>VII.1</kod><text>Next section</text></popisOsoby>
+  <popisOsoby><text>Not a publication</text></popisOsoby>
+</osoba>

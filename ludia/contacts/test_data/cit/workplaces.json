@@ -1,0 +1,50 @@
+{
+  "506": {
+    "id": 506,
+    "parent": null,
+    "treePath": "506",
+    "cdo_id": "506",
+    "localization": {
+      "sk_SK": {
+        "title": "Fakulta matematiky, fyziky a informatiky",
+        "abbreviation": ""
+      },
+      "en_EN": {
+        "title": "Faculty of Mathematics, Physics and Informatics",
+        "abbreviation": ""
+      }
+    }
+  },
+  "507": {
+    "id": 507,
+    "parent": "506",
+    "treePath": "506,507",
+    "cdo_id": "507",
+    "localization": {
+      "sk_SK": {
+        "title": "Katedra informatiky",
+        "abbreviation": ""
+      },
+      "en_EN": {
+        "title": "Department of Computer Science",
+        "abbreviation": ""
+      }
+    }
+  },
+  "508": {
+    "id": 508,
+    "parent": "507",
+    "treePath": "506,507,508",
+    "cdo_id": "508",
+    "localization": {
+      "sk_SK": {
+        "title": "Oddelenie výskumu",
+        "abbreviation": ""
+      },
+      "en_EN": {
+        "title": "Research unit",
+        "abbreviation": ""
+      }
+    }
+  }
+}

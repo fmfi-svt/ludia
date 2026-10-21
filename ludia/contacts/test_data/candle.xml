@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<timetable>
+  <lesson id="601">
+    <day>Št</day><start>09:00</start><end>10:30</end>
+    <teacher login="novak">Jana Nováková</teacher>
+    <teacher login="unknown">Unknown Teacher</teacher>
+    <type>Prednáška</type><room>A - 123</room>
+    <subject>Introduction to computing</subject><subject_code>INF101</subject_code>
+    <note>Weekly</note>
+  </lesson>
+</timetable>

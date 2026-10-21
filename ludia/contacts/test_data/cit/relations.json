@@ -1,0 +1,15 @@
+{
+  "201": {
+    "id": 201,
+    "user_id": "101",
+    "workplace_id": "508",
+    "job_title_id": "301",
+    "job_type_id": "6",
+    "default": "1",
+    "is_leader": "0",
+    "full_time_job": "0",
+    "part_time_job": "0",
+    "daily_student": "1",
+    "external_student": "0"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "text": {},
+  "varchar": {
+    "501": {
+      "id": 501,
+      "language": "sk_SK",
+      "cdo_id": "",
+      "contact_type_id": "2",
+      "value": "jana@example.test",
+      "workplace_user_id": "201"
+    },
+    "502": {
+      "id": 502,
+      "language": null,
+      "cdo_id": "",
+      "contact_type_id": "6",
+      "value": "A - 123",
+      "workplace_user_id": "201"
+    }
+  },
+  "int": [],
+  "double": []
+}
