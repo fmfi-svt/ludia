@@ -27,6 +27,8 @@ from ludia.contacts.models import (
 
 logger = logging.getLogger(__name__)
 
+FMFI_CIT_ID = 506
+
 EXPORT_URL = "https://cit.uniba.sk/kontakty/index.php/exports_v2/get_export"
 EXPORT_DOWNLOAD_LIST = [
     "users",

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Faculty directory" %} {{ block.super }}{% endblock %}
+
+{% block container %}
+  <h1>{% translate "Faculty directory" %}</h1>
+  <p>{% translate "Find people at the Faculty of Mathematics, Physics and Informatics, Comenius University, and view their contact details, affiliations, publications, and timetables." %}</p>
+
+  <form method="get" action="{% url 'index' %}" role="search" class="mb-4">
+    <label for="people-search" class="form-label">{% translate "Search people" %}</label>
+    <div class="form-row">
+      <input type="search" id="people-search" name="q" value="{{ query }}" class="form-input" autocomplete="off">
+      <button type="submit" class="btn">{% translate "Search" %}</button>
+    </div>
+    <label class="form-check mt-2">
+      <input type="checkbox" name="include_university" value="1"{% if include_university %} checked{% endif %}>
+      <span class="text-sm">{% translate "Search the whole university" %}</span>
+    </label>
+  </form>
+
+  <p>
+    {% blocktranslate count total=page_obj.paginator.count %}{{ total }} result{% plural %}{{ total }} results{% endblocktranslate %}
+  </p>
+
+  {% if page_obj %}
+    <div class="table-scroll mb-4">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">{% translate "Name" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for person in page_obj %}
+            <tr>
+              <td><a href="{% url 'profile' person.login %}">{{ person.full_name|default:person.login }}</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p>{% if query %}{% translate "No people match your search." %}{% else %}{% translate "No people are available yet." %}{% endif %}</p>
+  {% endif %}
+
+  {% if page_obj.has_other_pages %}
+    <nav class="pagination" aria-label="{% translate 'Pagination' %}">
+      {% if page_obj.has_previous %}
+        <a class="pagination__prev" href="{% querystring page=page_obj.previous_page_number %}">← {% translate "Previous" %}</a>
+      {% endif %}
+      {% for page_number in page_range %}
+        {% if page_number == page_obj.paginator.ELLIPSIS %}
+          <span class="pagination__ellipsis">{{ page_number }}</span>
+        {% elif page_number == page_obj.number %}
+          <span class="pagination__current" aria-current="page">{{ page_number }}</span>
+        {% else %}
+          <a href="{% querystring page=page_number %}">{{ page_number }}</a>
+        {% endif %}
+      {% endfor %}
+      {% if page_obj.has_next %}
+        <a class="pagination__next" href="{% querystring page=page_obj.next_page_number %}">{% translate "Next" %} →</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+{% endblock container %}
