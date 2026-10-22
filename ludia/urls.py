@@ -9,6 +9,7 @@ from django.urls import path
 urlpatterns = (
     [
         path("admin/", admin.site.urls),
+        path("i18n/", include("django.conf.urls.i18n")),
         path("", include("ludia.users.urls")),
     ]
     + i18n_patterns(

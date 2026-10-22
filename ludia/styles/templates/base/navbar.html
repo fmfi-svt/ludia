@@ -1,3 +1,6 @@
+{% load i18n language_urls %}
+{% get_current_language as current_language %}
+
 {# main navbar #}
 <nav class="navbar">
   <div class="navbar__inner">
@@ -10,6 +13,20 @@
       <iconify-icon icon="lucide:x" class="navbar__toggle-close" width="22"></iconify-icon>
     </button>
     <div class="navbar__nav" id="main-nav">
+      <form action="{% url 'set_language' %}" method="post">
+        {% csrf_token %}
+        {% if current_language == "sk" %}
+          <input type="hidden" name="next" value="{% language_url 'en' %}">
+          <button type="submit" name="language" value="en" class="navbar__link" aria-label="English" title="English">
+            <iconify-icon icon="flag:gb-4x3" width="20" height="15" style="display: block; width: 20px; height: 15px;" aria-hidden="true"></iconify-icon>
+          </button>
+        {% else %}
+          <input type="hidden" name="next" value="{% language_url 'sk' %}">
+          <button type="submit" name="language" value="sk" class="navbar__link" aria-label="slovensky" title="slovensky">
+            <iconify-icon icon="flag:sk-4x3" width="20" height="15" style="display: block; width: 20px; height: 15px;" aria-hidden="true"></iconify-icon>
+          </button>
+        {% endif %}
+      </form>
       {% if user.is_authenticated %}
         <span class="navbar__text">{{ user.username }}</span>
         <form action="{% url 'oidc_logout' %}" method="post">
