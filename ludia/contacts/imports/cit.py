@@ -51,7 +51,7 @@ CONTACT_MAPPING = {
     "11": "phone",  # uniba_voip
 }
 LANGUAGE_MAPPING = {"sk_SK": LanguageChoices.SK, "en_EN": LanguageChoices.EN}
-WORKPLACE_KEYWORDS = ["fakulta", "katedra", "centrum", "univerzita"]
+WORKPLACE_KEYWORDS = ["fakulta", "katedra", "centrum", "univerzita", "klinika", "ústav"]
 WORKPLACE_TITLES = ["dekanát"]
 # CIT has a parent PhD category plus full-time and external subcategories.
 DOCTORAL_JOB_TYPE_IDS = {"5", "6", "7"}
