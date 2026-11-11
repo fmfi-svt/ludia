@@ -1,3 +1,4 @@
+import re
 from typing import TYPE_CHECKING, Callable
 from urllib.parse import urlsplit
 
@@ -9,8 +10,35 @@ if TYPE_CHECKING:
     from ludia.contacts.models import Contact
 
 
+EXTERNAL_PHONE_PREFIX = "+421260295"
+
+
+def get_phone_counterpart(value: str) -> str | None:
+    """Return the external number or extension for our three-digit extensions."""
+    value = value.strip()
+    if re.fullmatch(r"[0-9]{3}", value):
+        return f"{EXTERNAL_PHONE_PREFIX}{value}"
+
+    try:
+        number = phonenumbers.parse(value, "SK")
+    except phonenumbers.NumberParseException:
+        return None
+
+    if not phonenumbers.is_valid_number(number) or number.extension:
+        return None
+
+    external = phonenumbers.format_number(number, phonenumbers.PhoneNumberFormat.E164)
+    if re.fullmatch(re.escape(EXTERNAL_PHONE_PREFIX) + r"[0-9]{3}", external):
+        return external[-3:]
+    return None
+
+
 def render_text(value: str) -> SafeString:
     return escape(value)
+
+
+def render_room(value: str) -> SafeString:
+    return render_text(re.sub(r"\s*-\s*", " - ", value))
 
 
 def render_email(value: str) -> SafeString:
@@ -48,6 +76,7 @@ def render_website(value: str) -> SafeString:
 
 
 CONTACT_RENDERERS: dict[str, Callable[[str], SafeString]] = {
+    "room": render_room,
     "email": render_email,
     "phone": render_phone,
     "website": render_website,

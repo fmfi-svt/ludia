@@ -8,7 +8,7 @@ from django.utils.html import escape, format_html
 from django.utils.safestring import SafeString
 from django.utils.translation import get_language
 
-from ludia.contacts.rendering import render_contact
+from ludia.contacts.rendering import get_phone_counterpart, render_contact
 
 if TYPE_CHECKING:
     from django.db.models.manager import RelatedManager
@@ -80,18 +80,44 @@ class Person(models.Model):
         if language is None:
             language = get_language()
 
-        contacts = self.contact_set.filter(
-            Q(language="") | Q(language=language)
-        ).select_related("contact_type")
+        contacts = list(
+            self.contact_set.filter(
+                Q(language="") | Q(language=language)
+            ).select_related("contact_type", "source")
+        )
+        derived_contacts = []
+        for contact in contacts:
+            if contact.contact_type.identifier != "phone":
+                continue
+            counterpart = get_phone_counterpart(contact.value)
+            if counterpart is not None:
+                derived_contacts.append(
+                    Contact(
+                        person=self,
+                        contact_type=contact.contact_type,
+                        source=contact.source,
+                        language=contact.language,
+                        value=counterpart,
+                    )
+                )
+
         seen_contact_values = set()
-        return [
-            contact
-            for contact in contacts
-            if not (
-                contact.value in seen_contact_values
-                or seen_contact_values.add(contact.value)
+        unique_contacts = []
+        # Real contacts take priority over derived counterparts.
+        for contact in contacts + derived_contacts:
+            value = contact.render()
+            if value in seen_contact_values:
+                continue
+            seen_contact_values.add(value)
+            unique_contacts.append(contact)
+        unique_contacts.sort(
+            key=lambda contact: (
+                contact.contact_type.order,
+                contact.source.order,
+                contact.value,
             )
-        ]
+        )
+        return unique_contacts
 
 
 class ContactType(models.Model):
